@@ -14,7 +14,7 @@
 #define smudgeFactor 0.0000000005
 
 const long gravitationalConst = 6.67408*pow(10,-11); //
-const double timestep = 10; //In seconds
+const double timestep = 120; //In seconds
 
 class plnt_obj {
 public:
@@ -23,7 +23,7 @@ public:
     long x,y,z,vx,vy,vz,mass;
     plnt_obj(std::string name):
         name(name),x(0),y(0),z(0),vx(0),vy(0),vz(0),mass(0){};
-    plnt_obj(double xPos,double yPos,double zPos, double xVel, double yVel, double zVel,double massInp):
+    plnt_obj(long xPos,long yPos,long zPos, long xVel, long yVel, long zVel,long massInp):
         name(""), x(xPos),y(yPos),z(zPos),vx(xVel),vy(yVel),vz(zVel),mass(massInp){};
     plnt_obj():
         name(""),x(0),y(0),z(0),vx(0),vy(0),vz(0),mass(0){};
@@ -42,15 +42,18 @@ public:
     
 };
 
-double distComp(plnt_obj planet1,plnt_obj planet2) {
+long distComp(plnt_obj planet1,plnt_obj planet2) {
+    std::cout << "distComp is running!\n";
     return pow( (pow((planet2.x-planet1.x),2)+pow((planet2.y-planet1.y),2)+pow((planet2.z-planet1.z),2)), 0.5);
 }
 
-double forceBetweenPlanets(plnt_obj planet1,plnt_obj planet2) {
+long forceBetweenPlanets(plnt_obj planet1,plnt_obj planet2) {
+    std::cout << "forceBetweenPlanets is running!\n";
     return (gravitationalConst*planet1.mass*planet2.mass)/distComp(planet1,planet2);
 }
 
 std::vector<long> unitVecBetweenPlanets(plnt_obj p1, plnt_obj p2){
+    std::cout << "unitVecBetweenPlanets is running!\n";
     long distance = distComp(p1, p2);
     std::vector<long> unitVector;
     long x_unit = (p1.x-p2.x)/distance;
@@ -64,12 +67,13 @@ std::vector<long> unitVecBetweenPlanets(plnt_obj p1, plnt_obj p2){
 }
 
 std::vector<long> ForceVector(plnt_obj p1, plnt_obj p2){
+    std::cout << "ForceVector is running!\n";
     //vector from p2 to p1
-    double force = forceBetweenPlanets(p1, p2);
+    long force = forceBetweenPlanets(p1, p2);
     std::vector<long> unitVec = unitVecBetweenPlanets(p1,p2);
     std::vector<long> forceVec;
-    for(int i=0;i<3;i++){
-        forceVec.push_back(unitVec[i]*force);
+    for(std::vector<long>::iterator i=unitVec.begin() ; i != unitVec.end() ;i++){
+        forceVec.push_back( (*i) * force);
     }
     return forceVec;
 }
@@ -134,6 +138,7 @@ int importPlanets(SolarSystem currentSys,std::string fileLocation) {
 }
 
 int updatePositionAndVelocity(std::vector<long> forceVector,plnt_obj planetFrom, plnt_obj planetTo) {
+    std::cout << "updatePositionAndVelocity is running!\n";
     planetFrom.vx += forceVector[0] / (planetFrom.mass) * timestep;
     planetFrom.vy += forceVector[1] / (planetFrom.mass) * timestep;
     planetFrom.vz += forceVector[2] / (planetFrom.mass) * timestep;
@@ -144,10 +149,13 @@ int updatePositionAndVelocity(std::vector<long> forceVector,plnt_obj planetFrom,
 }
 
 bool updateForTimestep(SolarSystem currentSys) {
+    std::cout << "updateForTimestep is running!\n";
     std::vector<plnt_obj> planetVector = currentSys.planetVector;
-    for (std::vector<plnt_obj>::iterator i = planetVector.begin(); i != planetVector.end()-1; i++) {
-        for (std::vector<plnt_obj>::iterator j = i+1; j != planetVector.end(); j++) {
+    for (std::vector<plnt_obj>::iterator i = planetVector.begin(); i != planetVector.end()-1; ++i) {
+        for (std::vector<plnt_obj>::iterator j = i+1; j != planetVector.end(); ++j) {
+            std::cout << "updateForTimestep loops!\n";
             std::vector<long> forceVector = ForceVector(*j,*i); // i is FROM, j is TO
+            std::cout << "updateForTimestep after force!\n";
             updatePositionAndVelocity(forceVector,*i,*j);
 
         }
@@ -156,11 +164,13 @@ bool updateForTimestep(SolarSystem currentSys) {
     std::vector<long> unitVecSunMoon = unitVecBetweenPlanets(planetVector[moonIndex], planetVector[sunIndex]);
     long dotProductEarthMoonSun = unitVecSunEarth[0]*unitVecSunMoon[0] + unitVecSunEarth[1]*unitVecSunMoon[1] + unitVecSunEarth[2]*unitVecSunMoon[2];
     if (dotProductEarthMoonSun > 1.0-smudgeFactor) {
-        
+        return true;
+    }
+    else {
+        return false;
     }
     
     
-    return false; //fix later!!! (true equals close dot product)
 }
 
 
@@ -168,14 +178,17 @@ bool updateForTimestep(SolarSystem currentSys) {
 
 
 int main() {
-    long safetyCuttoff; //Prevents infinite loop during testing
+    long safetyCuttoff = 0; //Prevents infinite loop during testing
     SolarSystem currentSys; //Creates the solar system
     int numPlanets = importPlanets(currentSys,"POI.txt");
     std::cout << currentSys;
+    std::cout << "Doing simulation step!\n";
     
     while (safetyCuttoff<1000000) {
+        std::cout << "Doing simulation step!\n";
         if (updateForTimestep(currentSys)){
             //Do more precise calculations
+            std::cout << "Found an eclipse!\n";
         }
 
         safetyCuttoff++; //Remove later
