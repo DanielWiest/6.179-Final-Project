@@ -27,6 +27,13 @@ public:
 class SolarSystem {
 public:
     std::vector<plnt_obj> planetVector;
+    friend std::ostream &operator<<(std::ostream &os, const SolarSystem &ss) {
+        std::vector<plnt_obj> currentVector = ss.planetVector;
+            for (std::vector<plnt_obj>::iterator i = currentVector.begin(); i != currentVector.end(); i++){
+                os << (*i).name << std::endl;
+            }
+            return os;
+    }
     
 };
 
@@ -98,19 +105,13 @@ int importPlanets(SolarSystem currentSys,std::string fileLocation) {
     return planetCount;
 }
 
-void printPlanetNames(SolarSystem currentSys) {
-    for (std::vector<plnt_obj>::iterator i = currentSys.planetVector.begin(); i != currentSys.planetVector.end(); i++){
-        std::cout << (*i).name << std::endl;
-    }
-}
-
 
 
 
 int main() {
     SolarSystem currentSys; //Creates the solar system
     int numPlanets = importPlanets(currentSys,"POI.txt");
-    printPlanetNames(currentSys);
+    std::cout << currentSys;
     
     
     
