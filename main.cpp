@@ -57,6 +57,15 @@ std::vector<long> unitVecBetweenPlanets(plnt_obj p1, plnt_obj p2){
 	//vector from p2 to p1
 	return unitVector;
 }
+std::vector<long> ForceVector(plnt_obj p1, plnt_obj p2){
+	double force = forceBetweenPlanets(p1, p2);
+	std::vector<long> unitVec = unitVecBetweenPlanets(p1,p2);
+	std::vector<long> forceVec;
+	for(int i=0;i<3;i++){
+		forceVec.push_back(unitVec[i]*force);
+	}
+	return forceVec;
+}
 int importPlanets(SolarSystem currentSys,std::string fileLocation) {
     int planetCount = 0;
     int count = 0;
