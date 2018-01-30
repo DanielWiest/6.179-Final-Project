@@ -8,8 +8,13 @@
 #include <string>
 
 
+#define earthIndex 3
+#define sunIndex 0
+#define moonIndex 9
+#define smudgeFactor 0.0000000005
+
 const long gravitationalConst = 6.67408*pow(10,-11); //
-//const double timestep = 10; //In second
+const double timestep = 10; //In seconds
 
 class plnt_obj {
 public:
@@ -37,7 +42,6 @@ public:
     
 };
 
-
 double distComp(plnt_obj planet1,plnt_obj planet2) {
     return pow( (pow((planet2.x-planet1.x),2)+pow((planet2.y-planet1.y),2)+pow((planet2.z-planet1.z),2)), 0.5);
 }
@@ -45,27 +49,31 @@ double distComp(plnt_obj planet1,plnt_obj planet2) {
 double forceBetweenPlanets(plnt_obj planet1,plnt_obj planet2) {
     return (gravitationalConst*planet1.mass*planet2.mass)/distComp(planet1,planet2);
 }
+
 std::vector<long> unitVecBetweenPlanets(plnt_obj p1, plnt_obj p2){
-	long distance = distComp(p1, p2);
-	std::vector<long> unitVector;
-	x_unit = (p1.x-p2.x)/distance;
-	y_unit = (p1.y-p2.y)/distance;
-	z_unit = (p1.z-p2.z)/distance;
-	unitVector.push_back(x_unit);
-	unitVector.push_back(y_unit);
-	unitVector.push_back(z_unit);
-	//vector from p2 to p1
-	return unitVector;
+    long distance = distComp(p1, p2);
+    std::vector<long> unitVector;
+    long x_unit = (p1.x-p2.x)/distance;
+    long y_unit = (p1.y-p2.y)/distance;
+    long z_unit = (p1.z-p2.z)/distance;
+    unitVector.push_back(x_unit);
+    unitVector.push_back(y_unit);
+    unitVector.push_back(z_unit);
+    //vector from p2 to p1
+    return unitVector;
 }
+
 std::vector<long> ForceVector(plnt_obj p1, plnt_obj p2){
-	double force = forceBetweenPlanets(p1, p2);
-	std::vector<long> unitVec = unitVecBetweenPlanets(p1,p2);
-	std::vector<long> forceVec;
-	for(int i=0;i<3;i++){
-		forceVec.push_back(unitVec[i]*force);
-	}
-	return forceVec;
+    //vector from p2 to p1
+    double force = forceBetweenPlanets(p1, p2);
+    std::vector<long> unitVec = unitVecBetweenPlanets(p1,p2);
+    std::vector<long> forceVec;
+    for(int i=0;i<3;i++){
+        forceVec.push_back(unitVec[i]*force);
+    }
+    return forceVec;
 }
+
 int importPlanets(SolarSystem currentSys,std::string fileLocation) {
     int planetCount = 0;
     int count = 0;
@@ -125,13 +133,53 @@ int importPlanets(SolarSystem currentSys,std::string fileLocation) {
     return planetCount;
 }
 
+int updatePositionAndVelocity(std::vector<long> forceVector,plnt_obj planetFrom, plnt_obj planetTo) {
+    planetFrom.vx += forceVector[0] / (planetFrom.mass) * timestep;
+    planetFrom.vy += forceVector[1] / (planetFrom.mass) * timestep;
+    planetFrom.vz += forceVector[2] / (planetFrom.mass) * timestep;
+    planetFrom.x += planetFrom.vx * timestep;
+    planetFrom.y += planetFrom.vy * timestep;
+    planetFrom.z += planetFrom.vz * timestep;
+    return 0;
+}
+
+bool updateForTimestep(SolarSystem currentSys) {
+    std::vector<plnt_obj> planetVector = currentSys.planetVector;
+    for (std::vector<plnt_obj>::iterator i = planetVector.begin(); i != planetVector.end()-1; i++) {
+        for (std::vector<plnt_obj>::iterator j = i+1; j != planetVector.end(); j++) {
+            std::vector<long> forceVector = ForceVector(*j,*i); // i is FROM, j is TO
+            updatePositionAndVelocity(forceVector,*i,*j);
+
+        }
+    }
+    std::vector<long> unitVecSunEarth = unitVecBetweenPlanets(planetVector[earthIndex], planetVector[sunIndex]); //to p1 from p2
+    std::vector<long> unitVecSunMoon = unitVecBetweenPlanets(planetVector[moonIndex], planetVector[sunIndex]);
+    long dotProductEarthMoonSun = unitVecSunEarth[0]*unitVecSunMoon[0] + unitVecSunEarth[1]*unitVecSunMoon[1] + unitVecSunEarth[2]*unitVecSunMoon[2];
+    if (dotProductEarthMoonSun > 1.0-smudgeFactor) {
+        
+    }
+    
+    
+    return false; //fix later!!! (true equals close dot product)
+}
+
+
 
 
 
 int main() {
+    long safetyCuttoff; //Prevents infinite loop during testing
     SolarSystem currentSys; //Creates the solar system
     int numPlanets = importPlanets(currentSys,"POI.txt");
     std::cout << currentSys;
+    
+    while (safetyCuttoff<1000000) {
+        if (updateForTimestep(currentSys)){
+            //Do more precise calculations
+        }
+
+        safetyCuttoff++; //Remove later
+    }
     
     
     
