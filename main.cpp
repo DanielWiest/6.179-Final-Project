@@ -45,7 +45,18 @@ double distComp(plnt_obj planet1,plnt_obj planet2) {
 double forceBetweenPlanets(plnt_obj planet1,plnt_obj planet2) {
     return (gravitationalConst*planet1.mass*planet2.mass)/distComp(planet1,planet2);
 }
-
+std::vector<long> unitVecBetweenPlanets(plnt_obj p1, plnt_obj p2){
+	long distance = distComp(p1, p2);
+	std::vector<long> unitVector;
+	x_unit = (p1.x-p2.x)/distance;
+	y_unit = (p1.y-p2.y)/distance;
+	z_unit = (p1.z-p2.z)/distance;
+	unitVector.push_back(x_unit);
+	unitVector.push_back(y_unit);
+	unitVector.push_back(z_unit);
+	//vector from p2 to p1
+	return unitVector;
+}
 int importPlanets(SolarSystem currentSys,std::string fileLocation) {
     int planetCount = 0;
     int count = 0;
