@@ -39,20 +39,15 @@ double forceBetweenPlanets(plnt_obj planet1,plnt_obj planet2) {
     return (gravitationalConst*planet1.mass*planet2.mass)/distComp(planet1,planet2);
 }
 
-
-
-
-int main(int argc, const char * argv[]) {
-    int planetCount;
-    int count;
-    SolarSystem currentSys;
+int importPlanets(SolarSystem currentSys,std::string fileLocation) {
+    int planetCount = 0;
+    int count = 0;
     std::ifstream ifs;
-    ifs.open ("POI.txt", std::ifstream::in);
+    ifs.open (fileLocation, std::ifstream::in);
     std::string value;
     while ( ifs.good() ){
-        
         getline ( ifs, value, ',' ); // read a string until next comma:
-        std::cout << value<<std::endl;
+        std::cout << value <<std::endl;
         switch (count) {
             case 0:
                 if (value == "") {
@@ -100,9 +95,22 @@ int main(int argc, const char * argv[]) {
         }
         count++;
     }
-    for (std::vector<plnt_obj>::iterator i = planetVector.begin(); i != planetVector.end(); i++){
+    return planetCount;
+}
+
+void printPlanetNames(SolarSystem currentSys) {
+    for (std::vector<plnt_obj>::iterator i = currentSys.planetVector.begin(); i != currentSys.planetVector.end(); i++){
         std::cout << (*i).name << std::endl;
     }
+}
+
+
+
+
+int main() {
+    SolarSystem currentSys; //Creates the solar system
+    int numPlanets = importPlanets(currentSys,"POI.txt");
+    printPlanetNames(currentSys);
     
     
     
