@@ -45,8 +45,18 @@ public:
     }
     int importPlanets(SolarSystem currentSys,std::string fileLocation);
     bool updateForTimestep();
+    bool isSolar();
     
 };
+
+std::string timeStampToHReadble(const time_t rawtime)
+{
+    struct tm * dt;
+    char buffer [50];
+    dt = localtime(&rawtime);
+    strftime(buffer, sizeof(buffer), "Month: %m | Day: %d | Hour: %H | Year: %y", dt);
+    return std::string(buffer);
+}
 
 long double sciToDub(const std::string& str) {
     
@@ -214,6 +224,15 @@ bool SolarSystem::updateForTimestep() {
     
 }
 
+bool SolarSystem::isSolar() {
+    if (distComp(planetVector[sunIndex],planetVector[earthIndex]) > distComp(planetVector[sunIndex],planetVector[moonIndex])) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 
 
 
@@ -225,7 +244,7 @@ int main() {
     std::cout << "Solar system successfully created with the following planets: "<<std::endl;
     std::cout << currentSys;
     //std::cout << currentSys.planetVector[earthIndex] << currentSys.planetVector[moonIndex] <<std::endl;
-    std::cout << "Beginning Simulation at time: \n" << currentSys.planetVector[0].time <<std::endl;
+    std::cout << "Beginning Simulation at time: \n" << timeStampToHReadble(currentSys.planetVector[0].time) <<std::endl;
     
     while (safetyCuttoff<numberSimRuns) {
         //std::cout << currentSys<<std::endl;
@@ -233,7 +252,13 @@ int main() {
         //std::cout << "Doing simulation step!\n";
         if ( currentSys.updateForTimestep() ){
             //Do more precise calculations
-            std::cout << "Found an eclipse!\n";
+            if (currentSys.isSolar()){
+            std::cout << "Found an solar eclipse at time: \n";
+            }
+            else {
+                std::cout << "Found an lunar eclipse at time: \n";
+            }
+            std::cout<< timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
         }
 
         safetyCuttoff++; //Remove later
