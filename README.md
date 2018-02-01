@@ -6,3 +6,5 @@ An eclipse predictor utilizing Forward-Euler methods and sphere intersection mat
 The solver reports total eclipses, but because of factors inside of its intersection calculations, may not report partial eclipses in which the centroid of the lunar body does not project onto any portion of the earth.
 
 Accurate in reporting total eclipses up to 2030 and beyond (with default timestep values)!
+
+Recommended to compile with -o3 optimization flag.
