@@ -225,7 +225,7 @@ bool SolarSystem::isSolar() { // its a solar eclipse if true, lunar if false
 void SolarSystem::initializationText() {
     std::cout << std::endl;
     std::cout <<"----------------------------------------------------------------------"<< std::endl;
-    std::cout << "Solar system successfully created with the following planets: "<<std::endl;
+    std::cout << "Solar system (Sun based coordinate origin) successfully created with the following planets: "<<std::endl;
     std::cout << std::endl;
     std::cout << *this;
     std::cout << std::endl;
