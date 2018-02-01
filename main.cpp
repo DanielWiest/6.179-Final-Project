@@ -131,7 +131,7 @@ int SolarSystem::importPlanets(SolarSystem currentSys,std::string fileLocation) 
                 break;
             case 3:
                 //std::cout << "x\n";
-                this->planetVector[planetCount].x = sciToDub(value)* 149600000000.0;
+                this->planetVector[planetCount].x = sciToDub(value)* 149597870700.0;
                 break;
             case 4:
                 //std::cout << "y\n";
@@ -184,7 +184,6 @@ int updatePosition(plnt_obj &planet) {
     planet.time += timestep;
     
     return 0;
-    
 }
 
 bool SolarSystem::updateForTimestep() {
@@ -201,6 +200,7 @@ bool SolarSystem::updateForTimestep() {
             updateVelocity((*it1),(*it2));
         }
     }
+    
     for (std::vector<plnt_obj>::iterator it3 = this->planetVector.begin(); it3 != this->planetVector.end(); it3++) {
         updatePosition(*it3);
     }
@@ -210,8 +210,8 @@ bool SolarSystem::updateForTimestep() {
     
     long double dotProductEarthMoonSun = (unitVecSunEarth[0]*unitVecSunMoon[0]) + (unitVecSunEarth[1]*unitVecSunMoon[1]) + (unitVecSunEarth[2]*unitVecSunMoon[2]);
     
-    std::cout << std::fixed;
-    std::cout << std::setprecision(10);
+    //std::cout << std::fixed;
+    //std::cout << std::setprecision(10);
     //std::cout << dotProductEarthMoonSun <<std::endl;
     
     if (dotProductEarthMoonSun > (1.0-smudgeFactor)) {
@@ -220,8 +220,6 @@ bool SolarSystem::updateForTimestep() {
     else {
         return false;
     }
-    
-    
 }
 
 bool SolarSystem::isSolar() {
@@ -232,10 +230,6 @@ bool SolarSystem::isSolar() {
         return false;
     }
 }
-
-
-
-
 
 int main() {
     long double safetyCuttoff = 0; //Prevents infinite loop during testing
@@ -256,7 +250,7 @@ int main() {
             std::cout << "Found an solar eclipse at time: \n";
             }
             else {
-                std::cout << "Found an lunar eclipse at time: \n";
+                std::cout << "Found an lunar eclipse at time (EST): \n";
             }
             std::cout<< timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
         }
