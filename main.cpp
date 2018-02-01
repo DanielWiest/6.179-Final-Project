@@ -10,15 +10,17 @@
 #include <sstream>
 
 
+// VALUES that can be adjusted
+#define timestep 120.0          //In seconds
+#define numberSimRuns 10000000
+
+//CONSTANTS
 #define earthIndex 1
 #define sunIndex 0
 #define moonIndex 2
-#define smudgeFactor 0.0000000005 //how off dot product can be to be considered an eclipse
-#define numberSimRuns 10000000
 #define earthRadius 6378100.0
-
 const long double gravitationalConst = 6.6740831*(pow(10.0,-11.0));
-const long double timestep = 120.0; //In seconds
+
 
 class plnt_obj { //contains all the needed info on a planet
 public:
@@ -45,13 +47,13 @@ public:
         }
         return os;
     }
-    int importPlanets(SolarSystem currentSys,std::string fileLocation); //gets planents from text file
+    void importPlanets(SolarSystem currentSys,std::string fileLocation); //gets planents from text file
     bool updateForTimestep(); //updates planet objects value for an increased time by one timestep, true = eclipse, false= no eclipse
     bool isSolar(); //true = solar eclipse, false = lunar eclipse
+    void initializationText();
 };
 
-std::string timeStampToHReadble(const time_t rawtime) //converts raw time to month day hour year
-{
+std::string timeStampToHReadble(const time_t rawtime) { //converts raw time to month day hour year
     struct tm * dt;
     char buffer [50];
     dt = localtime(&rawtime);
@@ -60,7 +62,6 @@ std::string timeStampToHReadble(const time_t rawtime) //converts raw time to mon
 }
 
 long double sciToDub(const std::string& str) { //changes text files scientific notation to doubles
-    
     std::stringstream ss(str);
     long double d = 0;
     ss >> d;
@@ -93,13 +94,14 @@ std::vector<long double> ForceVector(plnt_obj p1, plnt_obj p2){ //uses unit vect
     long double force = forceBetweenPlanets(p1, p2);
     std::vector<long double> unitVec = unitVecBetweenPlanets(p1,p2);
     std::vector<long double> forceVec;
+    
     for(std::vector<long double>::iterator i=unitVec.begin() ; i != unitVec.end() ;i++){
         forceVec.push_back( (*i) * force ); //to ensure x, y, z order
     }
     return forceVec;
 }
 
-int SolarSystem::importPlanets(SolarSystem currentSys,std::string fileLocation) { //gets planets info from text file
+void SolarSystem::importPlanets(SolarSystem currentSys,std::string fileLocation) { //gets planets info from text file
     int planetCount = 0;
     int count = 0;
     std::ifstream ifs;
@@ -109,40 +111,29 @@ int SolarSystem::importPlanets(SolarSystem currentSys,std::string fileLocation) 
         getline ( ifs, value, ',' ); // read a string until next comma:
         switch (count) {
             case 0:
-                if (value == "") {
-                    
-                }
-                else {
-
+                if (value != "") {
                     this->planetVector.push_back(plnt_obj(value));
                 }
                 break;
             case 1:
-
                 this->planetVector[planetCount].time = stold(value);
                 break;
             case 2:
-
                 this->planetVector[planetCount].mass = stold(value);
                 break;
             case 3:
-
                 this->planetVector[planetCount].x = sciToDub(value) * 1000.0;
                 break;
             case 4:
-
                 this->planetVector[planetCount].y = sciToDub(value) * 1000.0;
                 break;
             case 5:
-
                 this->planetVector[planetCount].z = sciToDub(value) * 1000.0;
                 break;
             case 6:
-
                 this->planetVector[planetCount].vx = sciToDub(value) * 1000.0;
                 break;
             case 7:
-
                 this->planetVector[planetCount].vy = sciToDub(value) * 1000.0;
                 break;
             case 8:
@@ -153,7 +144,6 @@ int SolarSystem::importPlanets(SolarSystem currentSys,std::string fileLocation) 
         }
         count++;
     }
-    return planetCount;
 }
 
 int updateVelocity(plnt_obj &planetFrom, plnt_obj &planetTo) { //forward Euler to update velocities of planets
@@ -179,7 +169,6 @@ int updatePosition(plnt_obj &planet) { //forward Euler to update the positions o
     planet.time += timestep;
     
     return 0;
-    
 }
 
 long double dot_product(std::vector<long double> a, std::vector<long double> b){
@@ -206,6 +195,7 @@ bool SolarSystem::updateForTimestep() {  //updates planet objects value for an i
             updateVelocity((*it1),(*it2));
         }
     }
+    
     for (std::vector<plnt_obj>::iterator it3 = this->planetVector.begin(); it3 != this->planetVector.end(); it3++) {
         updatePosition(*it3);
     }
@@ -221,8 +211,6 @@ bool SolarSystem::updateForTimestep() {  //updates planet objects value for an i
     else {
         return true;
     }
-    
-    
 }
 
 bool SolarSystem::isSolar() { // its a solar eclipse if true, lunar if false
@@ -234,52 +222,53 @@ bool SolarSystem::isSolar() { // its a solar eclipse if true, lunar if false
     }
 }
 
+void SolarSystem::initializationText() {
+    std::cout << std::endl;
+    std::cout <<"----------------------------------------------------------------------"<< std::endl;
+    std::cout << "Solar system successfully created with the following planets: "<<std::endl;
+    std::cout << std::endl;
+    std::cout << *this;
+    std::cout << std::endl;
+    std::cout <<"----------------------------------------------------------------------"<< std::endl;
+    std::cout << std::endl;
+    std::cout << "Beginning Simulation at time: " << timeStampToHReadble(this->planetVector[0].time)<<std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+}
+
 
 
 int main() {
     long double safetyCuttoff = 0; //Prevents infinite loop during testing
     SolarSystem currentSys; //Creates the solar system
-    int numPlanets = currentSys.importPlanets(currentSys,"POI.txt"); //imports planet data from text file
-    std::cout << std::endl;
-    std::cout <<"----------------------------------------------------------------------"<< std::endl;
-    std::cout << "Solar system successfully created with the following planets: "<<std::endl;
-    std::cout << std::endl;
-    std::cout << currentSys;
-    std::cout << std::endl;
-    std::cout <<"----------------------------------------------------------------------"<< std::endl;
-    std::cout << std::endl;
-    std::cout << "Beginning Simulation at time: " << timeStampToHReadble(currentSys.planetVector[0].time)<<std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    long beginTime = 0; // initialize
-    int count = 0; //initialize
+    currentSys.importPlanets(currentSys,"POI.txt"); //imports planet data from text file
+    currentSys.initializationText();
+    
+    bool isEclipseNow = false; // Used to prevent consecutive messages about the same eclipse
     while (safetyCuttoff<numberSimRuns) {
         if ( currentSys.updateForTimestep() ){
-            //Do more precise calculations
-            if(count != 0 && (currentSys.planetVector[0].time-beginTime)>50000){ //to ensure an eclipse is only printed once, if comment says once
-                count = 0; //resets after ample time ensuring eclipse is over so it is only printed once
-            }
             if (currentSys.isSolar()){
-                count = count+1; //once
-                if(count == 1){ //once
-                    beginTime = currentSys.planetVector[0].time; //once
+                if( !(isEclipseNow) ){ //once
                     std::cout << "Found an solar eclipse at time: \n";
+                    std::cout<<"    "<<timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
+                    std::cout << std::endl;
+                    isEclipseNow = true;
                 }
             }
             else {
-                count = count+1; //once
-                if(count == 1){ //once
-                    beginTime = currentSys.planetVector[0].time; //once
+                if( !(isEclipseNow) ){ //once
                     std::cout << "Found an lunar eclipse at time: \n";
+                    std::cout<<"    "<<timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
+                    std::cout << std::endl;
+                    isEclipseNow = true;
                 }
             }
-            if(count ==1){ //once
-                std::cout<<"    "<<timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
-                std::cout << std::endl;
-            }
         }
-        
+        else {
+            isEclipseNow = false;
+        }
         safetyCuttoff++; //Remove later
     }
-    std::cout << "Ending Simulation at time: \n" << timeStampToHReadble(currentSys.planetVector[0].time) <<std::endl;
+    std::cout << "Ending Simulation at time: \n" << currentSys.planetVector[0].time <<std::endl;
 }
+
