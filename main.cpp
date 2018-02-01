@@ -15,6 +15,7 @@
 #define moonIndex 2
 #define smudgeFactor 0.0000000005 //how off dot product can be to be considered an eclipse
 #define numberSimRuns 10000000
+#define earthRadius 6378100.0
 
 const long double gravitationalConst = 6.6740831*(pow(10.0,-11.0));
 const long double timestep = 120.0; //In seconds
@@ -47,7 +48,6 @@ public:
     int importPlanets(SolarSystem currentSys,std::string fileLocation); //gets planents from text file
     bool updateForTimestep(); //updates planet objects value for an increased time by one timestep, true = eclipse, false= no eclipse
     bool isSolar(); //true = solar eclipse, false = lunar eclipse
-    
 };
 
 std::string timeStampToHReadble(const time_t rawtime) //converts raw time to month day hour year
@@ -182,6 +182,19 @@ int updatePosition(plnt_obj &planet) { //forward Euler to update the positions o
     
 }
 
+long double dot_product(std::vector<long double> a, std::vector<long double> b){
+    long double product = a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+    return product;
+}
+
+std::vector<long double> subtractVectors(std::vector<long double> a, std::vector<long double> b){ //Subtract b from a!
+    std::vector<long double> result;
+    result.push_back(a[0]-b[0]);
+    result.push_back(a[1]-b[1]);
+    result.push_back(a[2]-b[2]);
+    return result;
+}
+
 bool SolarSystem::updateForTimestep() {  //updates planet objects value for an increased time by one timestep, true = eclipse, false= no eclipse
     std::vector<plnt_obj>::iterator it1; //nested for loops using it1 and and an iterator 1 ahead it1 to ensure no planet is updated more than once per timestep
     for (it1 = this->planetVector.begin(); it1 != this->planetVector.end()-1; it1++) {
@@ -197,20 +210,16 @@ bool SolarSystem::updateForTimestep() {  //updates planet objects value for an i
         updatePosition(*it3);
     }
     
-    std::vector<long double> unitVecSunEarth = unitVecBetweenPlanets(planetVector[sunIndex],planetVector[earthIndex]); //from sun to earth
-    std::vector<long double> unitVecSunMoon = unitVecBetweenPlanets(planetVector[sunIndex],planetVector[moonIndex]);
-    //use two above vectors to see if the sun, moon, and earth are all in a line
-    long double dotProductEarthMoonSun = (unitVecSunEarth[0]*unitVecSunMoon[0]) + (unitVecSunEarth[1]*unitVecSunMoon[1]) + (unitVecSunEarth[2]*unitVecSunMoon[2]);
+    std::vector<long double> OMinusC;
+    OMinusC.push_back(this->planetVector[sunIndex].x- this->planetVector[moonIndex].x);
+    OMinusC.push_back(this->planetVector[sunIndex].y- this->planetVector[moonIndex].y);
+    OMinusC.push_back(this->planetVector[sunIndex].z- this->planetVector[moonIndex].z);
     
-    std::cout << std::fixed;
-    std::cout << std::setprecision(10);
-    //std::cout << dotProductEarthMoonSun <<std::endl;
-    
-    if (dotProductEarthMoonSun > (1.0-smudgeFactor)) { //tolerance for eclipse
-        return true;
+    if (pow(dot_product( unitVecBetweenPlanets(this->planetVector[sunIndex],this->planetVector[earthIndex]) , OMinusC),2.0) - dot_product(OMinusC,OMinusC) + pow(earthRadius,2) < 0.0) {
+        return false;
     }
     else {
-        return false;
+        return true;
     }
     
     
@@ -224,8 +233,6 @@ bool SolarSystem::isSolar() { // its a solar eclipse if true, lunar if false
         return false;
     }
 }
-
-
 
 
 
@@ -274,7 +281,5 @@ int main() {
         
         safetyCuttoff++; //Remove later
     }
-    
-    std::cout << "Ending Simulation at time: \n" << currentSys.planetVector[0].time <<std::endl;
+    std::cout << "Ending Simulation at time: \n" << timeStampToHReadble(currentSys.planetVector[0].time) <<std::endl;
 }
-
