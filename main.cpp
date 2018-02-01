@@ -239,21 +239,36 @@ int main() {
     std::cout << currentSys;
     //std::cout << currentSys.planetVector[earthIndex] << currentSys.planetVector[moonIndex] <<std::endl;
     std::cout << "Beginning Simulation at time: \n" << timeStampToHReadble(currentSys.planetVector[0].time) <<std::endl;
-    
+    long beginTime = 0;
+	int count = 0;
     while (safetyCuttoff<numberSimRuns) {
         //std::cout << currentSys<<std::endl;
         //std::cout << currentSys.planetVector[0].time <<std::endl;
         //std::cout << "Doing simulation step!\n";
         if ( currentSys.updateForTimestep() ){
             //Do more precise calculations
+            if(count != 0 && (currentSys.planetVector[0].time-beginTime)>50000){
+				count = 0;
+			}
             if (currentSys.isSolar()){
-            std::cout << "Found an solar eclipse at time: \n";
+				count = count+1;
+				if(count == 1){
+					beginTime = currentSys.planetVector[0].time;
+            		std::cout << "Found an solar eclipse at time: \n";
+				}
             }
             else {
-                std::cout << "Found an lunar eclipse at time (EST): \n";
+				count = count+1;
+				if(count == 1){
+					beginTime = currentSys.planetVector[0].time;
+                	std::cout << "Found an lunar eclipse at time: \n";
+				}
             }
-            std::cout<< timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
+			if(count ==1){
+            	std::cout<< timeStampToHReadble(currentSys.planetVector[0].time) << std::endl;
+			}
         }
+
 
         safetyCuttoff++; //Remove later
     }
